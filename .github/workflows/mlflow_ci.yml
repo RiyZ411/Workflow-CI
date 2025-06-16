@@ -44,7 +44,6 @@ jobs:
         shell: bash -l {0}
         run: |
           conda activate heart-prediction-env
-          export MLFLOW_TRACKING_URI=${{ env.MLFLOW_TRACKING_URI }}
           cd MLProject
           python modelling.py \
             --x_train_path heart_preprocessing/X_train.csv \
@@ -65,18 +64,14 @@ jobs:
       - name: 💾 Baca RUN_ID dari file
         id: read_run_id
         run: |
-          if [ ! -f MLProject/run_id.txt ]; then
-            echo "run_id.txt tidak ditemukan!"
-            exit 1
-          fi
           RUN_ID=$(cat MLProject/run_id.txt)
+          echo "run_id=$RUN_ID"
           echo "RUN_ID=$RUN_ID" >> $GITHUB_OUTPUT
 
       - name: 🐳 Build Docker Image
         shell: bash -l {0}
         run: |
           conda activate heart-prediction-env
-          export MLFLOW_TRACKING_URI=${{ env.MLFLOW_TRACKING_URI }}
           cd MLProject
           mlflow models build-docker -m runs:/${{ steps.read_run_id.outputs.RUN_ID }}/model -n heart-model-image
 
@@ -91,4 +86,3 @@ jobs:
 
       - name: 🚚 Push Docker Image to Docker Hub
         run: docker push ${{ secrets.DOCKER_USERNAME }}/heart-model-image:latest
-        
