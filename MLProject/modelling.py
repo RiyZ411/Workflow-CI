@@ -1,10 +1,8 @@
 import argparse
 import os
-import dagshub
 import mlflow
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-import mlflow.sklearn
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
     roc_auc_score, cohen_kappa_score, confusion_matrix,
@@ -20,24 +18,7 @@ parser.add_argument("--y_train_path", type=str, default="heart_preprocessing/y_t
 parser.add_argument("--y_test_path", type=str, default="heart_preprocessing/y_test.csv")
 args = parser.parse_args()
 
-# Set manual tracking URI pakai URL dari repo DagsHub kamu
 mlflow.set_tracking_uri("https://dagshub.com/RiyZ411/msml-studi-kasus-heart.mlflow")
-
-# Set ENV dari secrets CI
-os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("MLFLOW_TRACKING_USERNAME")
-os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("MLFLOW_TRACKING_PASSWORD")
-os.environ["DAGSHUB_AUTH_TOKEN"] = os.getenv("DAGSHUB_TOKEN")
-
-assert os.environ["MLFLOW_TRACKING_USERNAME"], "MLFLOW_TRACKING_USERNAME is not set"
-assert os.environ["MLFLOW_TRACKING_PASSWORD"], "MLFLOW_TRACKING_PASSWORD is not set"
-assert os.environ["DAGSHUB_AUTH_TOKEN"], "DAGSHUB_AUTH_TOKEN is not set"
-
-# Inisialisasi DagsHub dan MLflow Tracking
-dagshub.init(
-    repo_owner='RiyZ411',
-    repo_name='msml-studi-kasus-heart',
-    mlflow=True
-)
 
 X_train = pd.read_csv(args.x_train_path)
 X_test = pd.read_csv(args.x_test_path)
@@ -56,36 +37,38 @@ with mlflow.start_run() as run:
     mlflow.log_metric("f1_score", f1_score(y_test, y_pred, average="macro"))
     mlflow.log_metric("cohen_kappa", cohen_kappa_score(y_test, y_pred))
 
+    # ROC AUC dengan handling biner/multikelas
     if hasattr(model, "predict_proba"):
         try:
             y_proba = model.predict_proba(X_test)
-            auc = roc_auc_score(y_test, y_proba, multi_class='ovr')
+            if y_proba.shape[1] == 2:
+                auc = roc_auc_score(y_test, y_proba[:, 1])
+            else:
+                auc = roc_auc_score(y_test, y_proba, multi_class='ovr')
             mlflow.log_metric("roc_auc", auc)
         except Exception as e:
             print(f"ROC AUC tidak bisa dihitung: {e}")
 
-    # Save confusion matrix
+    # Confusion Matrix
     cm = confusion_matrix(y_test, y_pred)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
     disp.plot()
+    plt.tight_layout()
     plt.savefig("conf_matrix.png")
-    mlflow.log_artifact("conf_matrix.png")
+    mlflow.log_artifact("conf_matrix.png", artifact_path="plots")
 
-    # Save classification report
-    report_text = classification_report(y_test, y_pred)
+    # Classification Report
     with open("classification_report.txt", "w") as f:
-        f.write(report_text)
-    mlflow.log_artifact("classification_report.txt")
+        f.write(classification_report(y_test, y_pred))
+    mlflow.log_artifact("classification_report.txt", artifact_path="reports")
 
     report_dict = classification_report(y_test, y_pred, output_dict=True)
     with open("metric_info.json", "w") as f_json:
         json.dump(report_dict, f_json, indent=4)
-    mlflow.log_artifact("metric_info.json")
+    mlflow.log_artifact("metric_info.json", artifact_path="reports")
 
-    # Log model
+    # Model dan run ID
     mlflow.sklearn.log_model(model, "model")
-
-    # Simpan RUN_ID
-    run_id = run.info.run_id
     with open("run_id.txt", "w") as f:
-        f.write(run_id)
+        f.write(run.info.run_id)
+    mlflow.log_artifact("run_id.txt", artifact_path="metadata")
