@@ -14,6 +14,7 @@ jobs:
     env:
       MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
       MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+      DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
 
     steps:
       - name: 🔁 Checkout Repository
@@ -31,11 +32,12 @@ jobs:
           environment-file: MLProject/conda.yaml
           auto-activate-base: false
 
-      - name: ⚙️ Activate Conda & Install MLflow
+      - name: ⚙️ Activate Conda & Install Dependencies
         shell: bash -l {0}
         run: |
           conda activate heart-prediction-env
           pip install "mlflow[extras]==2.19.0"
+          pip install dagshub==0.5.10
 
       - name: 🚀 Run modelling.py
         shell: bash -l {0}

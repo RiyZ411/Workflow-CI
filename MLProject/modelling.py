@@ -20,6 +20,13 @@ parser.add_argument("--y_train_path", type=str, default="heart_preprocessing/y_t
 parser.add_argument("--y_test_path", type=str, default="heart_preprocessing/y_test.csv")
 args = parser.parse_args()
 
+# Set manual tracking URI pakai URL dari repo DagsHub kamu
+mlflow.set_tracking_uri("https://dagshub.com/RiyZ411/msml-studi-kasus-heart.mlflow")
+
+# Set ENV dari secrets CI
+os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("MLFLOW_TRACKING_USERNAME")
+os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("MLFLOW_TRACKING_PASSWORD")
+
 # Inisialisasi DagsHub dan MLflow Tracking
 dagshub.init(
     repo_owner='RiyZ411',
