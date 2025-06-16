@@ -27,14 +27,22 @@ jobs:
           environment-file: MLProject/conda.yaml
           auto-activate-base: false
 
-      - name: ⚙️ Install MLflow
+      - name: ⚙️ Activate Conda & Install MLflow
+        shell: bash -l {0}
         run: |
+          conda activate heart-prediction-env
           pip install "mlflow[extras]==2.19.0"
 
-      - name: 🚀 Run MLflow Project
+      - name: 🚀 Run modelling.py secara langsung
+        shell: bash -l {0}
         run: |
+          conda activate heart-prediction-env
           cd MLProject
-          mlflow run .
+          python modelling.py \
+            --x_train_path heart_preprocessing/X_train.csv \
+            --x_test_path heart_preprocessing/X_test.csv \
+            --y_train_path heart_preprocessing/y_train.csv \
+            --y_test_path heart_preprocessing/y_test.csv
 
       - name: 📤 Upload Artifacts to GitHub
         uses: actions/upload-artifact@v4
@@ -46,7 +54,9 @@ jobs:
             MLProject/classification_report.txt
 
       - name: 🐳 Build Docker Image
+        shell: bash -l {0}
         run: |
+          conda activate heart-prediction-env
           cd MLProject
           RUN_ID=$(mlflow runs list --experiment-id 0 | awk 'NR==2{print $1}')
           echo "RUN_ID=${RUN_ID}"
