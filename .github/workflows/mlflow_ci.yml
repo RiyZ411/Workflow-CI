@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'MLProject/**'
+      - '.github/workflows/**'
   workflow_dispatch:
 
 jobs:
@@ -28,7 +29,7 @@ jobs:
 
       - name: ⚙️ Install MLflow
         run: |
-          pip install mlflow==2.19.0
+          pip install "mlflow[extras]==2.19.0"
 
       - name: 🚀 Run MLflow Project
         run: |
@@ -47,7 +48,8 @@ jobs:
       - name: 🐳 Build Docker Image
         run: |
           cd MLProject
-          export RUN_ID=$(mlflow runs list --experiment-id 0 | awk 'NR==2{print $1}')
+          RUN_ID=$(mlflow runs list --experiment-id 0 | awk 'NR==2{print $1}')
+          echo "RUN_ID=${RUN_ID}"
           mlflow models build-docker -m runs:/${RUN_ID}/model -n heart-model-image
 
       - name: 🔐 Login to Docker Hub
@@ -61,4 +63,3 @@ jobs:
 
       - name: 🚚 Push Docker Image to Docker Hub
         run: docker push ${{ secrets.DOCKER_USERNAME }}/heart-model-image:latest
-        
