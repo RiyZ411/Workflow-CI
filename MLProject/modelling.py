@@ -21,7 +21,11 @@ parser.add_argument("--y_test_path", type=str, default="heart_preprocessing/y_te
 args = parser.parse_args()
 
 # Inisialisasi DagsHub dan MLflow Tracking
-dagshub.init(repo_owner='RiyZ411', repo_name='msml-studi-kasus-heart', mlflow=True)
+dagshub.init(
+    repo_owner='RiyZ411',
+    repo_name='msml-studi-kasus-heart',
+    mlflow=True
+)
 
 X_train = pd.read_csv(args.x_train_path)
 X_test = pd.read_csv(args.x_test_path)
