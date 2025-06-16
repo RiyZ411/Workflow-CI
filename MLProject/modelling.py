@@ -13,7 +13,6 @@ from sklearn.metrics import (
 import matplotlib.pyplot as plt
 import json
 
-# Argument parser agar bisa dijalankan via mlflow run
 parser = argparse.ArgumentParser()
 parser.add_argument("--x_train_path", type=str, default="heart_preprocessing/X_train.csv")
 parser.add_argument("--x_test_path", type=str, default="heart_preprocessing/X_test.csv")
@@ -24,31 +23,23 @@ args = parser.parse_args()
 # Inisialisasi DagsHub dan MLflow Tracking
 dagshub.init(repo_owner='RiyZ411', repo_name='msml-studi-kasus-heart', mlflow=True)
 
-# Load data
 X_train = pd.read_csv(args.x_train_path)
 X_test = pd.read_csv(args.x_test_path)
 y_train = pd.read_csv(args.y_train_path).squeeze()
 y_test = pd.read_csv(args.y_test_path).squeeze()
 
-# Mulai eksperimen MLflow
-with mlflow.start_run():
-
-    # Training model
+with mlflow.start_run() as run:
     model = RandomForestClassifier(n_estimators=100)
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
 
-    # Logging parameter
     mlflow.log_param("n_estimators", 100)
-
-    # Logging metrik utama
     mlflow.log_metric("accuracy", accuracy_score(y_test, y_pred))
     mlflow.log_metric("precision", precision_score(y_test, y_pred, average="macro"))
     mlflow.log_metric("recall", recall_score(y_test, y_pred, average="macro"))
     mlflow.log_metric("f1_score", f1_score(y_test, y_pred, average="macro"))
-
-    # Logging metrik tambahan
     mlflow.log_metric("cohen_kappa", cohen_kappa_score(y_test, y_pred))
+
     if hasattr(model, "predict_proba"):
         try:
             y_proba = model.predict_proba(X_test)
@@ -57,24 +48,28 @@ with mlflow.start_run():
         except Exception as e:
             print(f"ROC AUC tidak bisa dihitung: {e}")
 
-    # Confusion matrix sebagai artefak
+    # Save confusion matrix
     cm = confusion_matrix(y_test, y_pred)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
     disp.plot()
     plt.savefig("conf_matrix.png")
     mlflow.log_artifact("conf_matrix.png")
 
-    # Classification report - TXT
+    # Save classification report
     report_text = classification_report(y_test, y_pred)
     with open("classification_report.txt", "w") as f:
         f.write(report_text)
     mlflow.log_artifact("classification_report.txt")
 
-    # Classification report - JSON
     report_dict = classification_report(y_test, y_pred, output_dict=True)
     with open("metric_info.json", "w") as f_json:
         json.dump(report_dict, f_json, indent=4)
     mlflow.log_artifact("metric_info.json")
 
-    # Logging model
+    # Log model
     mlflow.sklearn.log_model(model, "model")
+
+    # Simpan RUN_ID
+    run_id = run.info.run_id
+    with open("run_id.txt", "w") as f:
+        f.write(run_id)

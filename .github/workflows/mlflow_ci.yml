@@ -11,6 +11,10 @@ jobs:
   train-model:
     runs-on: ubuntu-latest
 
+    env:
+      MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+      MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+
     steps:
       - name: 🔁 Checkout Repository
         uses: actions/checkout@v4
@@ -33,7 +37,7 @@ jobs:
           conda activate heart-prediction-env
           pip install "mlflow[extras]==2.19.0"
 
-      - name: 🚀 Run modelling.py secara langsung
+      - name: 🚀 Run modelling.py
         shell: bash -l {0}
         run: |
           conda activate heart-prediction-env
@@ -52,15 +56,20 @@ jobs:
             MLProject/conf_matrix.png
             MLProject/metric_info.json
             MLProject/classification_report.txt
+            MLProject/run_id.txt
+
+      - name: 💾 Baca RUN_ID dari file
+        id: read_run_id
+        run: |
+          RUN_ID=$(cat MLProject/run_id.txt)
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_OUTPUT
 
       - name: 🐳 Build Docker Image
         shell: bash -l {0}
         run: |
           conda activate heart-prediction-env
           cd MLProject
-          RUN_ID=$(mlflow runs list --experiment-id 0 | awk 'NR==2{print $1}')
-          echo "RUN_ID=${RUN_ID}"
-          mlflow models build-docker -m runs:/${RUN_ID}/model -n heart-model-image
+          mlflow models build-docker -m runs:/${{ steps.read_run_id.outputs.RUN_ID }}/model -n heart-model-image
 
       - name: 🔐 Login to Docker Hub
         env:
