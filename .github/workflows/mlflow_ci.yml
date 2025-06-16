@@ -1,4 +1,4 @@
-name: MLflow Training CI - Advanced Level
+name: MLflow Training CI
 
 on:
   push:
