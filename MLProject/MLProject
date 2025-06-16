@@ -1,0 +1,17 @@
+name: heart-prediction-pipeline
+
+conda_env: conda.yaml
+
+entry_points:
+  main:
+    parameters:
+      x_train_path: {type: str, default: "heart_preprocessing/X_train.csv"}
+      x_test_path: {type: str, default: "heart_preprocessing/X_test.csv"}
+      y_train_path: {type: str, default: "heart_preprocessing/y_train.csv"}
+      y_test_path: {type: str, default: "heart_preprocessing/y_test.csv"}
+    command: >
+      python modelling.py
+      --x_train_path {x_train_path}
+      --x_test_path {x_test_path}
+      --y_train_path {y_train_path}
+      --y_test_path {y_test_path}
