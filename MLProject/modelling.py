@@ -26,6 +26,11 @@ mlflow.set_tracking_uri("https://dagshub.com/RiyZ411/msml-studi-kasus-heart.mlfl
 # Set ENV dari secrets CI
 os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("MLFLOW_TRACKING_USERNAME")
 os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("MLFLOW_TRACKING_PASSWORD")
+os.environ["DAGSHUB_AUTH_TOKEN"] = os.getenv("DAGSHUB_TOKEN")
+
+assert os.environ["MLFLOW_TRACKING_USERNAME"], "MLFLOW_TRACKING_USERNAME is not set"
+assert os.environ["MLFLOW_TRACKING_PASSWORD"], "MLFLOW_TRACKING_PASSWORD is not set"
+assert os.environ["DAGSHUB_AUTH_TOKEN"], "DAGSHUB_AUTH_TOKEN is not set"
 
 # Inisialisasi DagsHub dan MLflow Tracking
 dagshub.init(
