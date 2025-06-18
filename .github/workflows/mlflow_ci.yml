@@ -61,7 +61,7 @@ jobs:
           echo "run_id=$RUN_ID"
           echo "RUN_ID=$RUN_ID" >> $GITHUB_OUTPUT
 
-      - name: Upload to Github
+      - name: Upload to GitHub
         uses: actions/upload-artifact@v4
         with:
           name: mlflow-artifacts
@@ -89,4 +89,3 @@ jobs:
 
       - name: Push Docker Image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/heart-model-image:latest
-        
