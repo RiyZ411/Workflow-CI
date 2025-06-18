@@ -27,7 +27,9 @@ jobs:
           python-version: '3.12.7'
 
       - name: Check Env
-        run: echo "Tracking URI: $MLFLOW_TRACKING_URI"
+        run: |
+          echo "Tracking URI: ${MLFLOW_TRACKING_URI}"
+
 
       - name: Install dependencies
         uses: conda-incubator/setup-miniconda@v2
