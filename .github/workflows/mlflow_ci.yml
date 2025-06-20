@@ -51,10 +51,11 @@ jobs:
           conda activate heart-prediction-env
           cd MLProject
           mlflow run . \
-            -P x_train_path=../heart_preprocessing/X_train.csv \
-            -P x_test_path=../heart_preprocessing/X_test.csv \
-            -P y_train_path=../heart_preprocessing/y_train.csv \
-            -P y_test_path=../heart_preprocessing/y_test.csv
+            -P x_train_path=heart_preprocessing/X_train.csv \
+            -P x_test_path=heart_preprocessing/X_test.csv \
+            -P y_train_path=heart_preprocessing/y_train.csv \
+            -P y_test_path=heart_preprocessing/y_test.csv
+
 
       - name: Get latest MLflow run id
         id: read_run_id
